@@ -9,7 +9,7 @@ sales_data -> Sales comming in fron the imaginary webpage where the file is alre
 demographic_data -> Marketing information of the customer, such as age, gender and income. Can be used to furter build the model to loock at which gender is most likly to purshase etc
 segment_data -> A list of the customers
 
-On the screen you will see a plot desci
+On the screen you will see various plots that you as an end user can look at to understand the data provided better, and to understand wether or not the datamodel is trained good enogh
 
 Setup:
 After initial pull from git, run the following command to install dependencies:
