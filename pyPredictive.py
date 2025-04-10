@@ -4,8 +4,9 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, auc, precision_recall_curve
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, learning_curve
 import joblib
+import numpy as np
 
 # Load data from CSV files
 click_data = pd.read_csv('click_data.csv') # User behavior data
@@ -42,7 +43,7 @@ model.fit(X_train, y_train)
 joblib.dump(model, 'trained_model.pkl')
 
 # Predict for a specific product and segment of customers
-product_id = '67890' # Replace with actual product ID
+product_id = '67890' # Product you want to predict for. Could be enhanced to read input from file or stdin
 segment_customers = segment_data['customer_id'].unique()
 segment_data = data[data['customer_id'].isin(segment_customers)]
 
@@ -59,6 +60,8 @@ print("Top customers likely to purchase the product:", top_customers)
 top_customers.to_csv('top_customers.csv', index=False)
 
 # Visualization functions
+
+# Confusion Matrix: Evaluates the performance of the classification model
 def plot_confusion_matrix(y_test, y_pred):
     cm = confusion_matrix(y_test, y_pred)
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
@@ -67,6 +70,7 @@ def plot_confusion_matrix(y_test, y_pred):
     plt.ylabel('Actual')
     plt.show()
 
+# ROC Curve: Visualizes the trade-off between sensitivity and specificity
 def plot_roc_curve(y_test, y_pred_proba):
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
     roc_auc = auc(fpr, tpr)
@@ -81,6 +85,7 @@ def plot_roc_curve(y_test, y_pred_proba):
     plt.legend(loc="lower right")
     plt.show()
 
+# Precision-Recall Curve: Shows the balance between precision and recall
 def plot_precision_recall_curve(y_test, y_pred_proba):
     precision, recall, _ = precision_recall_curve(y_test, y_pred_proba)
     plt.figure()
@@ -90,11 +95,41 @@ def plot_precision_recall_curve(y_test, y_pred_proba):
     plt.title('Precision-Recall Curve')
     plt.show()
 
+# Feature Importance: Displays the importance of each feature in the model
 def plot_feature_importance(model, feature_names):
     importances = model.feature_importances_
     plt.figure()
     sns.barplot(x=importances, y=feature_names)
     plt.title('Feature Importance')
+    plt.show()
+
+# Feature Histograms: Visualizes the distribution of each feature
+def plot_feature_histograms(data, features):
+    data[features].hist(bins=30, figsize=(15, 10))
+    plt.suptitle('Feature Distributions')
+    plt.show()
+
+# Correlation Matrix: Shows the relationships between features
+def plot_correlation_matrix(data):
+    corr = data.corr()
+    sns.heatmap(corr, annot=True, cmap='coolwarm')
+    plt.title('Correlation Matrix')
+    plt.show()
+
+# Learning Curve: Visualizes the model's performance over different training set sizes
+def plot_learning_curve(model, X, y):
+    train_sizes, train_scores, test_scores = learning_curve(model, X, y, cv=5, n_jobs=-1,
+                                                            train_sizes=np.linspace(0.1, 1.0, 10))
+    train_scores_mean = np.mean(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    
+    plt.plot(train_sizes, train_scores_mean, label='Training score')
+    plt.plot(train_sizes, test_scores_mean, label='Cross-validation score')
+    
+    plt.xlabel('Training examples')
+    plt.ylabel('Score')
+    plt.title('Learning Curve')
+    plt.legend(loc='best')
     plt.show()
 
 # Predictions and visualizations
@@ -105,8 +140,13 @@ plot_roc_curve(y_test, y_pred_proba)
 plot_precision_recall_curve(y_test, y_pred_proba)
 plot_feature_importance(model, features)
 
+# Additional visualizations
+plot_feature_histograms(data, features)
+plot_correlation_matrix(data[features])
+plot_learning_curve(model, X_scaled, y)
+
 # Iterate over products and find top 3 products for purchase probability
-product_ids = ['12345', '67890', '54321'] # Replace with actual product IDs
+product_ids = ['12345', '67890', '54321'] # Top products you want to predict for. Could be enhanced to read input from file or stdin
 
 top_products = []
 
@@ -131,5 +171,3 @@ for product_id in product_ids:
 # Save the top products and customers to an Excel file
 results_df = pd.DataFrame(top_products)
 results_df.to_excel('results.xlsx', index=False)
-
-print("Top products and their most likely customers have been saved to results.xlsx.")
